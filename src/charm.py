@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright 2021 Canonical
+# Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-""" Module defining the Charmed operator for the FINOS Legend Studio. """
+"""Module defining the Charmed operator for the FINOS Legend Studio."""
 
 import json
 import logging
@@ -139,9 +139,9 @@ class LegendStudioCharm(legend_operator_base.BaseFinosLegendCoreServiceCharm):
 
     @classmethod
     def _get_required_relations(cls):
-        rels = super()._get_required_relations()
         # NOTE(aznashwan): the Studio cannot function without an SDLC/Engine:
-        rels.extend([SDLC_RELATION_NAME, ENGINE_RELATION_NAME])
+        rels = [SDLC_RELATION_NAME, ENGINE_RELATION_NAME]
+        rels.extend(super()._get_required_relations())
         return rels
 
     def _get_studio_service_url(self):
@@ -162,15 +162,17 @@ class LegendStudioCharm(legend_operator_base.BaseFinosLegendCoreServiceCharm):
         return redirect_uris
 
     def _get_legend_service_url_from_relaton(self, service_name):
-        """Given the name of a service, attempts to extract the
+        """Fetches the redirect URL for the given pre-related legend service.
+
+        Given the name of a service, attempts to extract the
         'legend-$NAME-url' property from the 'legend-$NAME' relation.
         """
         relation_name = "legend-%s" % service_name
-        LEGEND_RELATIONS = [SDLC_RELATION_NAME, ENGINE_RELATION_NAME]
-        if relation_name not in LEGEND_RELATIONS:
+        legend_relations = [SDLC_RELATION_NAME, ENGINE_RELATION_NAME]
+        if relation_name not in legend_relations:
             raise ValueError(
                 "Unknown service relation '%s', must be one of: %s"
-                % (relation_name, LEGEND_RELATIONS)
+                % (relation_name, legend_relations)
             )
 
         rel = self._get_relation(relation_name)
