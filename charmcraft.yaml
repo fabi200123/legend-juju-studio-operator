@@ -16,3 +16,8 @@ parts:
       - git
       # NOTE(aznashwan): required for installing pyjks:
       - python3-dev
+      # NOTE(claudiub): required for installing cffi:
+      - libffi-dev
+      # NOTE(claudiub): required for installing cryptography (cargo also contains rust):
+      - cargo
+      - libssl-dev
