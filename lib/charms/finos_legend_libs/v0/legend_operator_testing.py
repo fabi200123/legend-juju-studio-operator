@@ -21,7 +21,7 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 3
+LIBPATCH = 4
 
 
 TEST_CERTIFICATE_BASE64 = """
@@ -120,6 +120,8 @@ class BaseFinosLegendCharmTestCase(unittest.TestCase):
     def setUp(self):
         """Sets up the testcase by mocking utility methods and calling `_set_up_harness()`."""
         super().setUp()
+
+        self.patch(legend_operator_base.k8s_svc_patch, 'KubernetesServicePatch')
 
         self._set_up_utils_mocks()
 
@@ -334,6 +336,58 @@ class BaseFinosLegendCharmTestCase(unittest.TestCase):
         self.assertIsInstance(
             self.harness.charm.unit.status, model.ActiveStatus)
 
+    @mock.patch("ops.testing._TestingPebbleClient.restart_services")
+    @mock.patch("ops.testing._TestingPebbleClient.stop_services")
+    def _test_upgrade_charm(self, _container_stop_mock, _container_restart_mock):
+        self.harness.set_leader()
+        self.harness.begin_with_initial_hooks()
+
+        # We'll add the gitlab relation after the first upgrade.
+        test_data = self.harness.charm._get_relations_test_data()
+        gitlab_rel_name = self.harness.charm._get_legend_gitlab_relation_name()
+        gitlab_rel_data = test_data.pop(gitlab_rel_name)
+
+        # Add the rest of the relations.
+        for rel_name, rel_data in test_data.items():
+            self._add_relation(rel_name, rel_data)
+            self.harness.update_config()
+
+        # Setup for the Upgrade Charm event and emit it.
+        mock_get_uris = self.patch(self.harness.charm, '_get_legend_gitlab_redirect_uris')
+        fake_callback_uris = ['legendary.callback.url']
+        mock_get_uris.return_value = fake_callback_uris
+        self.harness.charm.on.upgrade_charm.emit()
+        mock_get_uris.assert_not_called()
+
+        # Add the gitlab relation.
+        gitlab_rel_id = self._add_relation(gitlab_rel_name, gitlab_rel_data)
+
+        # Assert that the unit is currently active.
+        self.assertIsInstance(
+            self.harness.charm.unit.status, model.ActiveStatus)
+
+        # Assert that the initial Callback URIs have been set.
+        relation_data = self.harness.get_relation_data(gitlab_rel_id, self.harness.charm.app)
+        expected_rel_data = {'legend-gitlab-redirect-uris': json.dumps(fake_callback_uris)}
+        self.assertDictEqual(expected_rel_data, relation_data)
+
+        # Setup for the second Upgrade Event.
+        fake_callback_uris = ['foo.lish']
+        mock_get_uris.return_value = fake_callback_uris
+
+        # Emit the Upgrade Charm event.
+        self.harness.charm.on.upgrade_charm.emit()
+
+        # Assert that the unit is still active.
+        self.assertIsInstance(
+            self.harness.charm.unit.status, model.ActiveStatus)
+
+        # Check if the Callback URIs have been updated.
+        mock_get_uris.assert_called()
+        relation_data = self.harness.get_relation_data(gitlab_rel_id, self.harness.charm.app)
+        expected_rel_data = {"legend-gitlab-redirect-uris": json.dumps(fake_callback_uris)}
+        self.assertDictEqual(expected_rel_data, relation_data)
+
 
 class BaseFinosLegendCoreServiceTestCharm(
         legend_operator_base.BaseFinosLegendCoreServiceCharm, BaseFinosLegendTestCharm):
@@ -417,9 +471,18 @@ class TestBaseFinosCoreServiceLegendCharm(BaseFinosLegendCharmTestCase):
                 BaseFinosLegendCoreServiceTestCharm._get_workload_container_name(): {
                     "resource": "image"}},
             "resources": {"image": {"type": "oci-image"}}}
+        charm_config = {
+            "options": {
+                "external-hostname": {
+                    "type": "string",
+                    "default": "",
+                },
+            },
+        }
         harness = ops_testing.Harness(
             BaseFinosLegendCoreServiceTestCharm,
-            meta=yaml.dump(charm_meta))
+            meta=yaml.dump(charm_meta),
+            config=yaml.dump(charm_config))
         return harness
 
     def _test_get_core_legend_service_configs(self):

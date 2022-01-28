@@ -28,3 +28,11 @@ options:
     description: |
       String identifier of the log level to be used by authentication-related
       PAC4J actions. Must be one of INFO, WARN, DEBUG, or TRACE, or OFF.
+
+  ### Nginx Ingress Integrator-related options:
+  external-hostname:
+    type: string
+    default: ""
+    description: |
+      String representing the DNS name this Application should respond to.
+      By default, this will be the Application's name.

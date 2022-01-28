@@ -58,3 +58,6 @@ class LegendStudioTestCase(legend_operator_testing.TestBaseFinosCoreServiceLegen
 
     def test_relations_waiting(self):
         self._test_relations_waiting()
+
+    def test_upgrade_charm(self):
+        self._test_upgrade_charm()

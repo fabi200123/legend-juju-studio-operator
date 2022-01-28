@@ -13,6 +13,7 @@ import jks
 from charms.finos_legend_db_k8s.v0 import legend_database
 from charms.finos_legend_gitlab_integrator_k8s.v0 import legend_gitlab
 from charms.nginx_ingress_integrator.v0 import ingress
+from charms.observability_libs.v0 import kubernetes_service_patch as k8s_svc_patch
 from OpenSSL import crypto
 from ops import charm, framework, model
 
@@ -24,7 +25,7 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 2
+LIBPATCH = 3
 
 logger = logging.getLogger(__name__)
 
@@ -179,12 +180,19 @@ class BaseFinosLegendCharm(charm.CharmBase):
 
         self._set_stored_defaults()
 
-        # TODO(aznashwan): worth always setting up an ingress for all services?
+        svc_hostname = self.model.config["external-hostname"] or self.app.name
         self.ingress = ingress.IngressRequires(
             self, {
-                "service-hostname": self.app.name,
+                "service-hostname": svc_hostname,
                 "service-name": self.app.name,
                 "service-port": self._get_application_connector_port()})
+
+        self.service_patcher = k8s_svc_patch.KubernetesServicePatch(
+            self,
+            [
+                (f"{self.app.name}", 80, self._get_application_connector_port()),
+            ],
+        )
 
         # Standard charm lifecycle events:
         self.framework.observe(
@@ -549,6 +557,9 @@ class BaseFinosLegendCharm(charm.CharmBase):
 
     def _on_config_changed(self, event: charm.ConfigChangedEvent):
         """Refreshes the service config."""
+        # TODO(claudiub): Update the SDLC and Engine relations with the new Service URL.
+        svc_hostname = self.model.config["external-hostname"] or self.app.name
+        self.ingress.update_config({"service-hostname": svc_hostname})
         self._refresh_charm_status()
 
     def _on_workload_container_pebble_ready(
@@ -567,6 +578,7 @@ class BaseFinosLegendCharm(charm.CharmBase):
         # if all the relations are present and write the configs itself:
         # container.autostart()
 
+        self._update_gitlab_relation_callback_uris()
         self._refresh_charm_status()
 
 
@@ -584,6 +596,9 @@ class BaseFinosLegendCoreServiceCharm(BaseFinosLegendCharm):
         super().__init__(*args)
 
         self._set_stored_defaults()
+
+        # Standard charm lifecycle events:
+        self.framework.observe(self.on.upgrade_charm, self._on_upgrade_charm)
 
         # Get relation names:
         legend_db_relation_name = self._get_legend_db_relation_name()
@@ -709,6 +724,18 @@ class BaseFinosLegendCoreServiceCharm(BaseFinosLegendCharm):
 
         return self._get_core_legend_service_configs(
             legend_db_credentials, legend_gitlab_credentials)
+
+    def _update_gitlab_relation_callback_uris(self):
+        relation = self._get_relation(self._get_legend_gitlab_relation_name())
+        if not relation:
+            return
+
+        redirect_uris = self._get_legend_gitlab_redirect_uris()
+        legend_gitlab.set_legend_gitlab_redirect_uris_in_relation_data(
+            relation.data[self.app], redirect_uris)
+
+    def _on_upgrade_charm(self, _: charm.UpgradeCharmEvent) -> None:
+        self._update_gitlab_relation_callback_uris()
 
     def _on_db_relation_joined(
             self, _: charm.RelationJoinedEvent) -> None:
