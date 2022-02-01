@@ -22,7 +22,7 @@ ENGINE_RELATION_NAME = "legend-engine"
 
 
 APPLICATION_SERVER_UI_PATH = "/studio"
-STUDIO_SERVICE_URL_FORMAT = "%(schema)s://%(host)s:%(port)s%(path)s"
+STUDIO_SERVICE_URL_FORMAT = "%(schema)s://%(host)s%(path)s"
 STUDIO_GITLAB_REDIRECT_URI_FORMAT = "%(base_url)s/log.in/callback"
 STUDIO_UI_CONFIG_FILE_CONTAINER_LOCAL_PATH = "/ui-config.json"
 STUDIO_HTTP_CONFIG_FILE_CONTAINER_LOCAL_PATH = "/http-config.json"
@@ -145,13 +145,12 @@ class LegendStudioCharm(legend_operator_base.BaseFinosLegendCoreServiceCharm):
         return rels
 
     def _get_studio_service_url(self):
-        ip_address = legend_operator_base.get_ip_address()
+        svc_name = self.model.config["external-hostname"] or self.app.name
         return STUDIO_SERVICE_URL_FORMAT % (
             {
                 # NOTE(aznashwan): we always return the plain HTTP endpoint:
                 "schema": legend_operator_base.APPLICATION_CONNECTOR_TYPE_HTTP,
-                "host": ip_address,
-                "port": APPLICATION_CONNECTOR_PORT_HTTP,
+                "host": svc_name,
                 "path": APPLICATION_SERVER_UI_PATH,
             }
         )
