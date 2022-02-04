@@ -20,7 +20,7 @@ LEGEND_GITLAB_RELATION_NAME = "legend-studio-gitlab"
 SDLC_RELATION_NAME = "legend-sdlc"
 ENGINE_RELATION_NAME = "legend-engine"
 
-
+STUDIO_INGRESS_ROUTE = "/"
 APPLICATION_SERVER_UI_PATH = "/studio"
 STUDIO_SERVICE_URL_FORMAT = "%(schema)s://%(host)s%(path)s"
 STUDIO_GITLAB_REDIRECT_URI_FORMAT = "%(base_url)s/log.in/callback"
@@ -67,6 +67,10 @@ class LegendStudioCharm(legend_operator_base.BaseFinosLegendCoreServiceCharm):
     @classmethod
     def _get_application_connector_port(cls):
         return APPLICATION_CONNECTOR_PORT_HTTP
+
+    @classmethod
+    def _get_ingress_routes(cls) -> str:
+        return STUDIO_INGRESS_ROUTE
 
     @classmethod
     def _get_workload_container_name(cls):
