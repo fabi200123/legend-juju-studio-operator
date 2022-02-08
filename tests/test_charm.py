@@ -59,6 +59,9 @@ class LegendStudioTestCase(legend_operator_testing.TestBaseFinosCoreServiceLegen
     def test_relations_waiting(self):
         self._test_relations_waiting()
 
+    def test_config_changed_update_gitlab_relation(self):
+        self._test_update_config_gitlab_relation()
+
     def test_upgrade_charm(self):
         self._test_upgrade_charm()
 
