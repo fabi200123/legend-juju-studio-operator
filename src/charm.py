@@ -150,10 +150,13 @@ class LegendStudioCharm(legend_operator_base.BaseFinosLegendCoreServiceCharm):
 
     def _get_studio_service_url(self):
         svc_name = self.model.config["external-hostname"] or self.app.name
+        schema = legend_operator_base.APPLICATION_CONNECTOR_TYPE_HTTP
+        if self.model.config["enable-tls"]:
+            schema = legend_operator_base.APPLICATION_CONNECTOR_TYPE_HTTPS
+
         return STUDIO_SERVICE_URL_FORMAT % (
             {
-                # NOTE(aznashwan): we always return the plain HTTP endpoint:
-                "schema": legend_operator_base.APPLICATION_CONNECTOR_TYPE_HTTP,
+                "schema": schema,
                 "host": svc_name,
                 "path": APPLICATION_SERVER_UI_PATH,
             }

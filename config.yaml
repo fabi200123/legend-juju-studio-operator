@@ -4,10 +4,6 @@
 options:
 
   ### Application-related options:
-  #
-  # TODO(aznashwan): add a separate option for https endpoints?
-  # Will need to see what certificates needs installing and where.
-
   server-ui-path:
     type: string
     default: /studio
@@ -30,6 +26,17 @@ options:
       PAC4J actions. Must be one of INFO, WARN, DEBUG, or TRACE, or OFF.
 
   ### Nginx Ingress Integrator-related options:
+  enable-tls:
+    type: boolean
+    default: false
+    description: |
+      Boolean representing whether or not this Legend Application endpoint is
+      accessed through HTTPS. Setting this option will not enable TLS on the
+      service itself, and it is meant to be used in conjunction with the
+      tls-secret-name config option on the Nginx Ingress Integrator Charm.
+      Setting this option will cause the Gitlab Callback URLs to be prefixed
+      by HTTPS instead of HTTP.
+
   external-hostname:
     type: string
     default: ""

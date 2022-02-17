@@ -85,3 +85,10 @@ class LegendStudioTestCase(legend_operator_testing.TestBaseFinosCoreServiceLegen
 
         expected_url = "http://%s%s" % (hostname, charm.APPLICATION_SERVER_UI_PATH)
         self.assertEqual(expected_url, actual_url)
+
+        # Test with enable-tls set.
+        self.harness.update_config({"enable-tls": True})
+        actual_url = self.harness.charm._get_studio_service_url()
+
+        expected_url = "https://%s%s" % (hostname, charm.APPLICATION_SERVER_UI_PATH)
+        self.assertEqual(expected_url, actual_url)
