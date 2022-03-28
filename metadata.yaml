@@ -7,8 +7,6 @@ display-name: FINOS Legend Studio Server
 # TODO(aznashwan): ask who should be here:
 maintainer: Nashwan Azhari <nazhari@cloudbasesolutions.com>
 
-description: |
-  Data model integration and query service for the FINOS Legend stack.
 summary: |
   Data model integration and query service for the FINOS Legend stack.
 
