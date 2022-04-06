@@ -207,7 +207,7 @@ class LegendStudioCharm(legend_operator_base.BaseFinosLegendCoreServiceCharm):
             "appName": "studio",
             "env": "test",
             "sdlc": {"url": service_urls["sdlc"]},
-            "depot": {"url": "__LEGEND_DEPOT_URL__/api"},
+            "depot": {"url": "http://legend.finos.org/unused"},
             "engine": {"url": service_urls["engine"]},
             "documentation": {"url": "https://legend.finos.org"},
             "options": {

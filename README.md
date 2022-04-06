@@ -52,6 +52,10 @@ $ juju relate finos-legend-studio-k8s finos-legend-engine-k8s
 This charm by default uses the latest version of the
 [finos/legend-studio](https://hub.docker.com/r/finos/legend-studio) image.
 
+## Charm releases
+
+This repository is configured to automatically build and publish a new Charm revision after a Pull Request merges. For more information, see [here](docs/CharmPublishing.md).
+
 ## Contributing
 
 Visit Legend [Contribution Guide](https://github.com/finos/legend/blob/master/CONTRIBUTING.md) to learn how to contribute to Legend.
