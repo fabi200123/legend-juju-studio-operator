@@ -62,6 +62,9 @@ class LegendStudioTestCase(legend_operator_testing.TestBaseFinosCoreServiceLegen
     def test_config_changed_update_gitlab_relation(self):
         self._test_update_config_gitlab_relation()
 
+    def test_update_config_gitlab_relation_without_being_leader(self):
+        self._test_update_config_gitlab_relation_without_being_leader()
+
     def test_upgrade_charm(self):
         self._test_upgrade_charm()
 
